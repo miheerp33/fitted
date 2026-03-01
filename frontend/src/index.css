@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream-100 text-warm-900 antialiased;
+    background-image: radial-gradient(ellipse 120% 80% at 50% -20%, rgba(193, 127, 89, 0.06), transparent),
+      radial-gradient(ellipse 80% 50% at 100% 0%, rgba(253, 252, 251, 0.8), transparent);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium
+      bg-accent text-white shadow-soft
+      hover:bg-accent-dark hover:shadow-card focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-cream-100
+      disabled:opacity-50 disabled:pointer-events-none
+      transition-all duration-200;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-medium
+      bg-cream-200 text-warm-800 border border-cream-300
+      hover:bg-cream-300 hover:border-stone-300 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-2 focus:ring-offset-cream-100
+      transition-all duration-200;
+  }
+  .input-field {
+    @apply w-full px-4 py-2.5 rounded-xl border border-cream-300 bg-white text-warm-900
+      placeholder:text-stone-400
+      focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent
+      transition-all duration-200;
+  }
+  .card {
+    @apply rounded-2xl bg-white border border-cream-200/80 shadow-soft overflow-hidden;
+  }
+  .card-hover {
+    @apply card hover:shadow-card-hover hover:border-cream-300/60 transition-all duration-300;
+  }
+}
