@@ -9,6 +9,7 @@ import { wardrobeRouter } from './routes/wardrobe.js';
 import { outfitsRouter } from './routes/outfits.js';
 import { shareRouter } from './routes/share.js';
 import { authMiddleware } from './middleware/auth.js';
+import { whitelistMiddleware } from './middleware/whitelist.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,10 +23,10 @@ function asyncHandler(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 }
 
-app.use('/api/upload', asyncHandler(authMiddleware), uploadRouter);
+app.use('/api/upload', asyncHandler(authMiddleware), whitelistMiddleware, uploadRouter);
 app.use('/api/wardrobe', asyncHandler(authMiddleware), wardrobeRouter);
-app.use('/api/recommend', asyncHandler(authMiddleware), recommendRouter);
-app.use('/api/moodboard', asyncHandler(authMiddleware), moodboardRouter);
+app.use('/api/recommend', asyncHandler(authMiddleware), whitelistMiddleware, recommendRouter);
+app.use('/api/moodboard', asyncHandler(authMiddleware), whitelistMiddleware, moodboardRouter);
 app.use('/api/feedback', asyncHandler(authMiddleware), feedbackRouter);
 app.use('/api/outfits', asyncHandler(authMiddleware), outfitsRouter);
 app.use('/api/share', shareRouter);
