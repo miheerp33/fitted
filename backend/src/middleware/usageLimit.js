@@ -5,10 +5,16 @@ const WHITELISTED = (process.env.WHITELISTED_EMAILS || '')
   .map(e => e.trim().toLowerCase())
   .filter(Boolean);
 
-const DAILY_LIMITS = {
-  upload:    parseInt(process.env.DAILY_LIMIT_UPLOAD    || '3'),
-  recommend: parseInt(process.env.DAILY_LIMIT_RECOMMEND || '5'),
-  moodboard: parseInt(process.env.DAILY_LIMIT_MOODBOARD || '5'),
+const TOTAL_LIMITS = {
+  upload:     parseInt(process.env.TOTAL_LIMIT_UPLOAD      || '10'),
+  generation: parseInt(process.env.TOTAL_LIMIT_GENERATION  || '10'),
+};
+
+// recommend and moodboard share the same 'generation' pool
+const ENDPOINT_KEY = {
+  upload:    'upload',
+  recommend: 'generation',
+  moodboard: 'generation',
 };
 
 export function usageLimitMiddleware(endpoint) {
@@ -18,28 +24,27 @@ export function usageLimitMiddleware(endpoint) {
     // Whitelisted users are unlimited
     if (email && WHITELISTED.includes(email)) return next();
 
-    if (!supabaseAdmin) return next(); // fail open if DB not configured
+    if (!supabaseAdmin) return next();
 
     const userId = req.user?.id;
     if (!userId) return next();
 
-    const limit = DAILY_LIMITS[endpoint];
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD UTC
+    const key = ENDPOINT_KEY[endpoint];
+    const limit = TOTAL_LIMITS[key];
 
     const { data: row } = await supabaseAdmin
       .from('api_usage')
       .select('count')
       .eq('user_id', userId)
-      .eq('date', today)
-      .eq('endpoint', endpoint)
+      .eq('endpoint', key)
       .maybeSingle();
 
     const used = row?.count ?? 0;
 
     if (used >= limit) {
       return res.status(429).json({
-        error: 'Daily limit reached',
-        message: `You've used all ${limit} ${endpoint} calls for today. Resets at midnight UTC.`,
+        error: 'Usage limit reached',
+        message: `You've used all ${limit} ${key} credits. Contact us for more access.`,
         limit,
         used,
       });
@@ -49,7 +54,7 @@ export function usageLimitMiddleware(endpoint) {
     res.on('finish', () => {
       if (res.statusCode < 400) {
         supabaseAdmin
-          .rpc('increment_api_usage', { p_user_id: userId, p_date: today, p_endpoint: endpoint })
+          .rpc('increment_api_usage', { p_user_id: userId, p_endpoint: key })
           .catch(() => {});
       }
     });

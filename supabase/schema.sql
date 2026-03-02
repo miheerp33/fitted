@@ -107,13 +107,13 @@ create policy "Users can delete own saved outfits"
 -- Policy name: "Authenticated upload", Allowed operation: INSERT, Target: (none),
 --   WITH CHECK: (bucket_id = 'wardrobe' AND (storage.foldername(name))[1] = auth.uid()::text)
 
--- API usage tracking (for per-user daily rate limiting on AI endpoints)
-create table if not exists public.api_usage (
+-- API usage tracking (lifetime limits for non-whitelisted users)
+drop table if exists public.api_usage;
+create table public.api_usage (
   user_id uuid not null references auth.users(id) on delete cascade,
-  date date not null default current_date,
   endpoint text not null,
   count integer not null default 0,
-  primary key (user_id, date, endpoint)
+  primary key (user_id, endpoint)
 );
 
 alter table public.api_usage enable row level security;
@@ -126,7 +126,6 @@ create policy "Users can read own usage"
 -- Atomically increment usage count and return the new value
 create or replace function increment_api_usage(
   p_user_id uuid,
-  p_date date,
   p_endpoint text
 ) returns integer
 language plpgsql
@@ -135,9 +134,9 @@ as $$
 declare
   new_count integer;
 begin
-  insert into public.api_usage (user_id, date, endpoint, count)
-  values (p_user_id, p_date, p_endpoint, 1)
-  on conflict (user_id, date, endpoint)
+  insert into public.api_usage (user_id, endpoint, count)
+  values (p_user_id, p_endpoint, 1)
+  on conflict (user_id, endpoint)
   do update set count = api_usage.count + 1
   returning count into new_count;
   return new_count;
