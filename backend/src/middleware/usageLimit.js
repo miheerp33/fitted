@@ -53,9 +53,9 @@ export function usageLimitMiddleware(endpoint) {
     // Increment only after a successful response
     res.on('finish', () => {
       if (res.statusCode < 400) {
-        supabaseAdmin
-          .rpc('increment_api_usage', { p_user_id: userId, p_endpoint: key })
-          .catch(() => {});
+        Promise.resolve(
+          supabaseAdmin.rpc('increment_api_usage', { p_user_id: userId, p_endpoint: key })
+        ).catch(() => {});
       }
     });
 
